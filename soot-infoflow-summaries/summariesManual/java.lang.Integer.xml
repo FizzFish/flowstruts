@@ -185,8 +185,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Integer: java.lang.Integer value]"
-						AccessPathTypes="[java.lang.Integer]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Integer: int value]"
+						BaseType="java.lang.Integer"
+                        AccessPathTypes="[int]"
+						 />
 				</flow>
 			</flows>
 		</method>
@@ -194,8 +196,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Integer: java.lang.Integer value]"
-						AccessPathTypes="[java.lang.Integer]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Integer: int value]"
+						BaseType="java.lang.Integer"
+                        AccessPathTypes="[int]"
+						 />
 				</flow>
 			</flows>
 		</method>
@@ -203,8 +207,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Integer: java.lang.Integer value]"
-						AccessPathTypes="[java.lang.Integer]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Integer: int value]"
+						BaseType="java.lang.Integer"
+                        AccessPathTypes="[int]" 
+						 />
 				</flow>
 			</flows>
 		</method>
