@@ -221,7 +221,9 @@
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
 					<to sourceSinkType="Return" AccessPath="[java.lang.Character: char value]"
-						AccessPathTypes="[char]" />
+						BaseType="java.lang.Character"
+                        AccessPathTypes="[char]" 
+						 />
 				</flow>
 			</flows>
 		</method>

@@ -129,8 +129,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Short: java.lang.Short value]"
-						AccessPathTypes="[java.lang.Short]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Short: short value]"
+						BaseType="java.lang.Short"
+                        AccessPathTypes="[short]" 
+						 />
 				</flow>
 			</flows>
 		</method>
@@ -138,8 +140,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Short: java.lang.Short value]"
-						AccessPathTypes="[java.lang.Short]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Short: short value]"
+						BaseType="java.lang.Short"
+                        AccessPathTypes="[short]" 
+						 />
 				</flow>
 			</flows>
 		</method>
@@ -147,8 +151,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Short: java.lang.Short value]"
-						AccessPathTypes="[java.lang.Short]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Short: short value]"
+						BaseType="java.lang.Short"
+                        AccessPathTypes="[short]" 
+						 />
 				</flow>
 			</flows>
 		</method>

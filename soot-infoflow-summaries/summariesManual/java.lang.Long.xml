@@ -188,8 +188,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Long: java.lang.Long value]"
-						AccessPathTypes="[java.lang.Long]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Long: long value]"
+						BaseType="java.lang.Long"
+                        AccessPathTypes="[long]" 
+						 />
 				</flow>
 			</flows>
 		</method>
@@ -197,8 +199,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Long: java.lang.Long value]"
-						AccessPathTypes="[java.lang.Long]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Long: long value]"
+						BaseType="java.lang.Long"
+                        AccessPathTypes="[long]" 
+						 />
 				</flow>
 			</flows>
 		</method>
@@ -206,8 +210,10 @@
 			<flows>
 				<flow isAlias="false" typeChecking="false">
 					<from sourceSinkType="Parameter" ParameterIndex="0" />
-					<to sourceSinkType="Return" AccessPath="[java.lang.Long: java.lang.Long value]"
-						AccessPathTypes="[java.lang.Long]" />
+					<to sourceSinkType="Return" AccessPath="[java.lang.Long: long value]"
+						BaseType="java.lang.Long"
+                        AccessPathTypes="[long]" 
+						 />
 				</flow>
 			</flows>
 		</method>
