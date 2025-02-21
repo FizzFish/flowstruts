@@ -133,21 +133,21 @@
 		</method>
 		<method id="java.lang.Object readObject()">
 			<flows>
-				<flow isAlias="false" typeChecking="false" cutSubfields="true">
+				<flow isAlias="false" typeChecking="false" cutSubfields="true" ignoreTypes="true">
 					<from sourceSinkType="Field"
 						AccessPath="[java.io.InputStream: java.io.InputStream innerStream]"
 						AccessPathTypes="[java.io.InputStream]"/>
-					<to sourceSinkType="Return" />
+					<to sourceSinkType="Return" BaseType="java.lang.Object" />
 				</flow>
 			</flows>
 		</method>
 		<method id="java.lang.Object readObjectOverride()">
 			<flows>
-				<flow isAlias="false" typeChecking="false" cutSubfields="true">
+				<flow isAlias="false" typeChecking="false" cutSubfields="true" ignoreTypes="true">
 					<from sourceSinkType="Field" 
 						AccessPath="[java.io.InputStream: java.io.InputStream innerStream]"
 						AccessPathTypes="[java.io.InputStream]"/>
-					<to sourceSinkType="Return" />
+					<to sourceSinkType="Return" BaseType="java.lang.Object" />
 				</flow>
 			</flows>
 		</method>
@@ -163,11 +163,11 @@
 		</method>
 		<method id="java.lang.Object readUnshared()">
 			<flows>
-				<flow isAlias="false" typeChecking="false" cutSubfields="true">
+				<flow isAlias="false" typeChecking="false" cutSubfields="true" ignoreTypes="true">
 					<from sourceSinkType="Field" 
 						AccessPath="[java.io.InputStream: java.io.InputStream innerStream]"
 						AccessPathTypes="[java.io.InputStream]"/>
-					<to sourceSinkType="Return" />
+					<to sourceSinkType="Return" BaseType="java.lang.Object" />
 				</flow>
 			</flows>
 		</method>
