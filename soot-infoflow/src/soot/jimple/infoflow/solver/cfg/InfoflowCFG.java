@@ -25,7 +25,16 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import heros.solver.IDESolver;
-import soot.*;
+import soot.Body;
+import soot.Local;
+import soot.RefType;
+import soot.Scene;
+import soot.SootField;
+import soot.SootMethod;
+import soot.Trap;
+import soot.Unit;
+import soot.Value;
+import soot.ValueBox;
 import soot.jimple.AssignStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.InvokeExpr;
@@ -281,11 +290,6 @@ public class InfoflowCFG implements IInfoflowCFG {
 	@Override
 	public DirectedGraph<Unit> getOrCreateUnitGraph(SootMethod m) {
 		return delegate.getOrCreateUnitGraph(m);
-	}
-
-	@Override
-	public List<Value> getParameterRefs(SootMethod m) {
-		return delegate.getParameterRefs(m);
 	}
 
 	@Override
