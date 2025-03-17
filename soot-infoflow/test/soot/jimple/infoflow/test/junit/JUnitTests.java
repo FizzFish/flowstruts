@@ -74,15 +74,7 @@ public abstract class JUnitTests extends AbstractJUnitTests {
 		if (!fi.getCanonicalFile().equals(f.getCanonicalFile())) {
 			addTestPathes(fi, appPathBuilder);
 		}
-		fi = new File(f, "../soot-infoflow-summaries");
-		if (!fi.getCanonicalFile().equals(f.getCanonicalFile())) {
-			addTestPathes(fi, appPathBuilder);
-		}
 		fi = new File("soot-infoflow");
-		if (fi.exists()) {
-			addTestPathes(fi, appPathBuilder);
-		}
-		fi = new File("soot-infoflow-summaries");
 		if (fi.exists()) {
 			addTestPathes(fi, appPathBuilder);
 		}
@@ -210,20 +202,7 @@ public abstract class JUnitTests extends AbstractJUnitTests {
 	 * @throws IOException
 	 */
 	public static File getInfoflowRoot(Class<?> referenceClass) throws IOException {
-		File classFile = new File(referenceClass.getProtectionDomain().getCodeSource().getLocation().getPath());
-		File f = classFile;
-		if (f.exists()) {
-			while (!f.getName().equals("soot-infoflow") && f.getParentFile() != null)
-				f = f.getParentFile();
-
-			// The project root must exist and must not be the file system root
-			if (f.exists() && f.getParentFile() != null)
-				return f;
-
-			logger.warn("Finding project root from class file {} failed", classFile);
-		} else
-			logger.warn("Class file {} does not exist", classFile);
-		return getInfoflowRoot();
+		return getInfoflowRoot(referenceClass, "soot-infoflow");
 	}
 
 	/**
@@ -232,22 +211,7 @@ public abstract class JUnitTests extends AbstractJUnitTests {
 	 * @return The directory in which the FlowDroid main project is located
 	 */
 	public static File getInfoflowRoot() throws IOException {
-		File testRoot = new File(".").getCanonicalFile();
-
-		if (!new File(testRoot, "src").exists()) {
-			// Try a subfolder
-			File subFolder = new File(testRoot, "soot-infoflow");
-			if (subFolder.exists())
-				testRoot = subFolder;
-			else {
-				// Try a sibling folder
-				testRoot = new File(testRoot.getParentFile(), "soot-infoflow");
-			}
-		}
-
-		if (!new File(testRoot, "src").exists())
-			throw new RuntimeException(String.format("Test root not found in %s", testRoot.getAbsolutePath()));
-		return testRoot;
+		return getInfoflowRoot("soot-infoflow");
 	}
 
 }
