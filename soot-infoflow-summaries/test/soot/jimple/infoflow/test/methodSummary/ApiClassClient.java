@@ -596,4 +596,12 @@ public class ApiClassClient {
 		sink(bvar);
 	}
 
+	public void testTypeNarrowing() {
+		String secret = stringSource();
+		// split: String -> String[]
+		// Tests that getMorePreciseType correctly
+		// keeps the array in the type
+		Object[] splitted = secret.split(";");
+		sink(splitted);
+	}
 }
