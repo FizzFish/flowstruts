@@ -338,7 +338,7 @@ public abstract class SummaryTaintWrapperTests extends BaseSummaryTaintWrapperTe
 
 	@Test(timeout = 30000)
 	public void listIrrelevantItemTest() {
-		testFlowForMethod("<soot.jimple.infoflow.test.methodSummary.ApiClassClient: void listIrrelevantItemTest()>", 1);
+		testNoFlowForMethod("<soot.jimple.infoflow.test.methodSummary.ApiClassClient: void listIrrelevantItemTest()>");
 	}
 
 	@Test
