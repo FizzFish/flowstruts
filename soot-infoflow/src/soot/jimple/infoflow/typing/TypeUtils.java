@@ -189,36 +189,45 @@ public class TypeUtils {
 	/**
 	 * Gets the more precise one of the two given types. If there is no ordering
 	 * (i.e., the two types are not cast-compatible) null is returned.
-	 * 
-	 * @param tp1 The first type
-	 * @param tp2 The second type
+	 * IMPORTANT: this method is not commutative on array types. The second type must
+	 * always be the declared type, which is used to infer the array depth.
+	 * Consider, for example, the case
+	 *   objArr[i] = str;
+	 * where we can narrow the type of objArr to String[]. Vice versa,
+	 *   obj = strArr[i];
+	 * allows us to narrow the type of obj to String. Therefore,
+	 * getMorePreciseType(String, Object[]) should return String[] and
+	 * getMorePreciseType(Object[], String) should return String.
+	 *
+	 * @param possibleRefinement The first type
+	 * @param declType The second type
 	 * @return The more precise one of the two given types
 	 */
-	public Type getMorePreciseType(Type tp1, Type tp2) {
+	public Type getMorePreciseType(Type possibleRefinement, Type declType) {
 		final FastHierarchy fastHierarchy = scene.getOrMakeFastHierarchy();
 
-		if (tp1 == null)
-			return tp2;
-		else if (tp2 == null)
-			return tp1;
-		else if (tp1 == tp2)
-			return tp1;
-		else if (TypeUtils.isObjectLikeType(tp1))
-			return tp2;
-		else if (TypeUtils.isObjectLikeType(tp2))
-			return tp1;
-		else if (tp1 instanceof PrimType && tp2 instanceof PrimType)
+		if (declType == null)
+			return possibleRefinement;
+		else if (possibleRefinement == null)
+			return declType;
+		else if (declType == possibleRefinement)
+			return declType;
+		else if (TypeUtils.isObjectLikeType(declType))
+			return possibleRefinement;
+		else if (TypeUtils.isObjectLikeType(possibleRefinement))
+			return declType;
+		else if (declType instanceof PrimType && possibleRefinement instanceof PrimType)
 			return null;
-		else if (fastHierarchy.canStoreType(tp2, tp1))
-			return tp2;
-		else if (fastHierarchy.canStoreType(tp1, tp2))
-			return tp1;
+		else if (fastHierarchy.canStoreType(possibleRefinement, declType))
+			return possibleRefinement;
+		else if (fastHierarchy.canStoreType(declType, possibleRefinement))
+			return declType;
 		else {
 			// If one type is an array type and the other one is the base type,
 			// we still accept the cast
-			if (tp1 instanceof ArrayType && tp2 instanceof ArrayType) {
-				ArrayType at1 = (ArrayType) tp1;
-				ArrayType at2 = (ArrayType) tp2;
+			if (declType instanceof ArrayType && possibleRefinement instanceof ArrayType) {
+				ArrayType at1 = (ArrayType) declType;
+				ArrayType at2 = (ArrayType) possibleRefinement;
 				if (at1.numDimensions != at2.numDimensions)
 					return null;
 				Type preciseType = getMorePreciseType(at1.getElementType(), at2.getElementType());
@@ -226,27 +235,19 @@ public class TypeUtils {
 					return null;
 
 				return ArrayType.v(preciseType, at1.numDimensions);
-			} else if (tp1 instanceof ArrayType) {
-				ArrayType at = (ArrayType) tp1;
-				return getMorePreciseType(at.getElementType(), tp2);
-			} else if (tp2 instanceof ArrayType) {
-				ArrayType at = (ArrayType) tp2;
-				return getMorePreciseType(tp1, at.getElementType());
+			} else if (declType instanceof ArrayType) {
+				ArrayType at = (ArrayType) declType;
+				Type preciseType = getMorePreciseType(at.getElementType(), possibleRefinement);
+				if (preciseType == null)
+					return null;
+
+				return ArrayType.v(preciseType, at.numDimensions);
+			} else if (possibleRefinement instanceof ArrayType) {
+				ArrayType at = (ArrayType) possibleRefinement;
+				return getMorePreciseType(at.getElementType(), declType);
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Gets the more precise one of the two given types
-	 * 
-	 * @param tp1 The first type
-	 * @param tp2 The second type
-	 * @return The more precise one of the two given types
-	 */
-	public String getMorePreciseType(String tp1, String tp2) {
-		Type newType = getMorePreciseType(getTypeFromString(tp1), getTypeFromString(tp2));
-		return newType == null ? null : "" + newType;
 	}
 
 	/**

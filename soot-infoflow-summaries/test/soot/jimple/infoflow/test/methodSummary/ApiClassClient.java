@@ -585,7 +585,7 @@ public class ApiClassClient {
 	}
 
 	public void listIrrelevantItemTest() {
-		String secret = TelephonyManager.getDeviceId();
+		String secret = stringSource();
 
 		List<Object> lvar = new ArrayList<>();
 		Boolean bvar = true;
@@ -593,8 +593,15 @@ public class ApiClassClient {
 		lvar.add(secret); // Adds tainted data to the list
 		lvar.add(bvar);
 
-		ConnectionManager cm = new ConnectionManager();
-		cm.publish(bvar);
+		sink(bvar);
 	}
 
+	public void testTypeNarrowing() {
+		String secret = stringSource();
+		// split: String -> String[]
+		// Tests that getMorePreciseType correctly
+		// keeps the array in the type
+		Object[] splitted = secret.split(";");
+		sink(splitted);
+	}
 }

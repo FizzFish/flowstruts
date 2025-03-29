@@ -51,7 +51,7 @@ public abstract class BaseSummaryTaintWrapperTests {
 	}
 
 	protected void testFlowForMethod(String m, int count) {
-
+		testFlowForMethod(m, count, null);
 	}
 
 	protected void testFlowForMethod(String m, int count, Consumer<InfoflowConfiguration> configCallback) {
