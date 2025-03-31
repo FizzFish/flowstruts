@@ -226,18 +226,18 @@ public class TypeUtils {
 			// If one type is an array type and the other one is the base type,
 			// we still accept the cast
 			if (declType instanceof ArrayType && possibleRefinement instanceof ArrayType) {
-				ArrayType at1 = (ArrayType) declType;
-				ArrayType at2 = (ArrayType) possibleRefinement;
+				ArrayType at1 = (ArrayType) possibleRefinement;
+				ArrayType at2 = (ArrayType) declType;
 				if (at1.numDimensions != at2.numDimensions)
 					return null;
 				Type preciseType = getMorePreciseType(at1.getElementType(), at2.getElementType());
 				if (preciseType == null)
 					return null;
 
-				return ArrayType.v(preciseType, at1.numDimensions);
+				return ArrayType.v(preciseType, at2.numDimensions);
 			} else if (declType instanceof ArrayType) {
 				ArrayType at = (ArrayType) declType;
-				Type preciseType = getMorePreciseType(at.getElementType(), possibleRefinement);
+				Type preciseType = getMorePreciseType(possibleRefinement, at.getElementType());
 				if (preciseType == null)
 					return null;
 
