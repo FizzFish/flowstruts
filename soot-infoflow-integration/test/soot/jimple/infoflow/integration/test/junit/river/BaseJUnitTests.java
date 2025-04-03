@@ -16,6 +16,7 @@ import soot.jimple.infoflow.cfg.DefaultBiDiICFGFactory;
 import soot.jimple.infoflow.sourcesSinks.definitions.ISourceSinkDefinition;
 import soot.jimple.infoflow.sourcesSinks.manager.BaseSourceSinkManager;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
+import soot.jimple.infoflow.test.base.AbstractJUnitTests;
 import soot.jimple.infoflow.test.junit.JUnitTests;
 
 /**
@@ -111,13 +112,8 @@ public abstract class BaseJUnitTests extends JUnitTests {
 	 * 
 	 * @return The directory in which the FlowDroid main project is located
 	 */
-	public static File getIntegrationRoot() {
-		File testRoot = new File(".");
-		if (!new File(testRoot, "testAPKs").exists())
-			testRoot = new File(testRoot, "soot-infoflow-integration");
-		if (!new File(testRoot, "testAPKs").exists())
-			throw new RuntimeException(String.format("Test root not found in %s", testRoot.getAbsolutePath()));
-		return testRoot;
+	public static File getIntegrationRoot() throws IOException {
+		return AbstractJUnitTests.getInfoflowRoot(BaseJUnitTests.class, "soot-infoflow-integration");
 	}
 
 }

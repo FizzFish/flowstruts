@@ -16,6 +16,8 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import jakarta.servlet.http.HttpServlet;
@@ -27,6 +29,8 @@ import jakarta.servlet.http.HttpServlet;
  *
  */
 public abstract class AbstractJUnitTests {
+
+	protected static final Logger logger = LoggerFactory.getLogger(AbstractJUnitTests.class);
 
 	/**
 	 * Appends the given path to the given {@link StringBuilder} if it exists
@@ -87,6 +91,59 @@ public abstract class AbstractJUnitTests {
 		String springJAR = MultipartHttpServletRequest.class.getProtectionDomain().getCodeSource().getLocation()
 				.getPath();
 		appendWithSeparator(libPathBuilder, new File(springJAR));
+	}
+
+	/**
+	 * Gets the root of the current project from a reference class located in that
+	 * project
+	 * 
+	 * @param referenceClass The reference class
+	 * @param moduleName     The name of the FlowDroid module for which to get the
+	 *                       root folder
+	 * @return The root folder of the project
+	 * @throws IOException
+	 */
+	public static File getInfoflowRoot(Class<?> referenceClass, String moduleName) throws IOException {
+		File classFile = new File(referenceClass.getProtectionDomain().getCodeSource().getLocation().getPath());
+		File f = classFile;
+		if (f.exists()) {
+			while (!f.getName().equals(moduleName) && f.getParentFile() != null)
+				f = f.getParentFile();
+
+			// The project root must exist and must not be the file system root
+			if (f.exists() && f.getParentFile() != null)
+				return f;
+
+			logger.warn("Finding project root from class file {} failed", classFile);
+		} else
+			logger.warn("Class file {} does not exist", classFile);
+		return getInfoflowRoot(moduleName);
+	}
+
+	/**
+	 * Gets the root in which the FlowDroid main project is located
+	 * 
+	 * @param moduleName The name of the FlowDroid module for which to get the root
+	 *                   folder
+	 * @return The directory in which the FlowDroid main project is located
+	 */
+	public static File getInfoflowRoot(String moduleName) throws IOException {
+		File testRoot = new File(".").getCanonicalFile();
+
+		if (!new File(testRoot, "src").exists()) {
+			// Try a subfolder
+			File subFolder = new File(testRoot, moduleName);
+			if (subFolder.exists())
+				testRoot = subFolder;
+			else {
+				// Try a sibling folder
+				testRoot = new File(testRoot.getParentFile(), moduleName);
+			}
+		}
+
+		if (!new File(testRoot, "src").exists())
+			throw new RuntimeException(String.format("Test root not found in %s", testRoot.getAbsolutePath()));
+		return testRoot;
 	}
 
 }

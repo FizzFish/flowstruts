@@ -28,6 +28,7 @@ import soot.jimple.infoflow.IInfoflow;
 import soot.jimple.infoflow.config.ConfigForTest;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
+import soot.jimple.infoflow.test.base.AbstractJUnitTests;
 
 /**
  * abstract super class of all test cases which handles initialization, keeps
@@ -58,7 +59,7 @@ public abstract class JUnitTests {
 
 	@BeforeClass
 	public static void setUp() throws IOException {
-		File f = new File(".");
+		File f = AbstractJUnitTests.getInfoflowRoot(JUnitTests.class, "soot-infoflow-summaries");
 		File testSrc1 = new File(f, "bin");
 		File testSrc4 = new File(f, "testBin");
 		File testSrc2 = new File(f, "build" + File.separator + "classes");
