@@ -1317,7 +1317,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 	 * @author Steven Arzt
 	 *
 	 */
-	protected static interface IInPlaceInfoflow extends IInfoflow {
+	public static interface IInPlaceInfoflow extends IInfoflow {
 
 		public void runAnalysis(final ISourceSinkManager sourcesSinks, SootMethod entryPoint);
 

@@ -13,7 +13,12 @@ package soot.jimple.infoflow.data;
 import java.util.Arrays;
 
 import com.google.common.base.Joiner;
-import soot.*;
+
+import soot.Local;
+import soot.NullType;
+import soot.SootField;
+import soot.Type;
+import soot.Value;
 import soot.jimple.ArrayRef;
 import soot.jimple.InstanceFieldRef;
 import soot.jimple.Jimple;
@@ -66,18 +71,18 @@ public class AccessPath implements Cloneable {
 
 	AccessPath(Local val, SootField[] appendingFields, Type valType, Type[] appendingFieldTypes, boolean taintSubFields,
 			boolean isCutOffApproximation, ArrayTaintType arrayTaintType, boolean canHaveImmutableAliases) {
-		this(val, valType, null,
-			 AccessPathFragment.createFragmentArray(appendingFields, appendingFieldTypes, null),
-			 taintSubFields, isCutOffApproximation, arrayTaintType, canHaveImmutableAliases);
+		this(val, valType, null, AccessPathFragment.createFragmentArray(appendingFields, appendingFieldTypes, null),
+				taintSubFields, isCutOffApproximation, arrayTaintType, canHaveImmutableAliases);
 	}
 
 	AccessPath(Local val, Type valType, AccessPathFragment[] fragments, boolean taintSubFields,
 			boolean isCutOffApproximation, ArrayTaintType arrayTaintType, boolean canHaveImmutableAliases) {
-		this(val, valType, null, fragments, taintSubFields, isCutOffApproximation, arrayTaintType, canHaveImmutableAliases);
+		this(val, valType, null, fragments, taintSubFields, isCutOffApproximation, arrayTaintType,
+				canHaveImmutableAliases);
 	}
 
 	AccessPath(Local val, Type valType, ContainerContext[] ctxt, AccessPathFragment[] fragments, boolean taintSubFields,
-               boolean isCutOffApproximation, ArrayTaintType arrayTaintType, boolean canHaveImmutableAliases) {
+			boolean isCutOffApproximation, ArrayTaintType arrayTaintType, boolean canHaveImmutableAliases) {
 		this.value = val;
 		this.baseType = valType;
 		this.baseContext = ctxt;
@@ -238,6 +243,7 @@ public class AccessPath implements Cloneable {
 	}
 
 	private int hashCodeWOContext = 0;
+
 	public int hashCodeWithoutContext() {
 		if (hashCodeWOContext != 0)
 			return hashCodeWOContext;
@@ -311,7 +317,8 @@ public class AccessPath implements Cloneable {
 
 		AccessPath other = (AccessPath) obj;
 
-		if (this.hashCodeWOContext != 0 && other.hashCodeWOContext != 0 && this.hashCodeWOContext != other.hashCodeWOContext)
+		if (this.hashCodeWOContext != 0 && other.hashCodeWOContext != 0
+				&& this.hashCodeWOContext != other.hashCodeWOContext)
 			return false;
 
 		if (value == null) {
@@ -500,7 +507,6 @@ public class AccessPath implements Cloneable {
 		return this.baseContext;
 	}
 
-
 	/**
 	 * Gets whether sub-fields shall be tainted. If this access path is e.g. a.b.*,
 	 * the result is true, whereas it is false for a.b.
@@ -573,7 +579,7 @@ public class AccessPath implements Cloneable {
 	 * 
 	 * @return The access path that is used in the zero abstraction
 	 */
-	static AccessPath getZeroAccessPath() {
+	public static AccessPath getZeroAccessPath() {
 		if (zeroAccessPath == null)
 			zeroAccessPath = new AccessPath(Jimple.v().newLocal("zero", NullType.v()), null, NullType.v(), null, false,
 					false, ArrayTaintType.ContentsAndLength, false);

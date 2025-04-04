@@ -22,6 +22,28 @@ public class AndroidTests extends FlowDroidTests {
 	}
 
 	@Test
+	public void testGeoLocation() throws IOException {
+		File rootDir = getIntegrationRoot();
+		SetupApplication app = initApplication(new File(rootDir, "testAPKs/CoordinatesToURLParameter.apk"));
+		app.getConfig().getPathConfiguration()
+				.setPathReconstructionMode(InfoflowConfiguration.PathReconstructionMode.Fast);
+		InfoflowResults results = app.runInfoflow(new File(rootDir, "SourcesAndSinks_GeoLocationNetworkOnly.txt"));
+		Assert.assertEquals(1, results.size());
+
+		DataFlowResult res = results.getResultSet().stream().findFirst().get();
+		boolean found = false;
+		for (Stmt stmt : res.getSource().getPath()) {
+			if (stmt.containsInvokeExpr()) {
+				String sig = stmt.getInvokeExpr().getMethod().getSignature();
+				if (sig.contains("android.location.Location: double")) {
+					found = true;
+				}
+			}
+		}
+		Assert.assertTrue(found);
+	}
+
+	@Test
 	public void testResourceResolving() throws IOException {
 		File rootDir = getIntegrationRoot();
 		SetupApplication app = initApplication(new File(rootDir, "testAPKs/Collections/StringResourcesTest.apk"));
