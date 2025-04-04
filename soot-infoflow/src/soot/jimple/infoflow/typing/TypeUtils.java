@@ -21,9 +21,11 @@ import soot.ShortType;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Type;
+import soot.UByteType;
 import soot.VoidType;
 import soot.jimple.infoflow.InfoflowManager;
 import soot.jimple.infoflow.data.AccessPath;
+import soot.options.Options;
 
 /**
  * Class containing various utility methods for dealing with type information
@@ -295,9 +297,16 @@ public class TypeUtils {
 			t = CharType.v();
 		else if (type.equals("short"))
 			t = ShortType.v();
-		else if (type.equals("byte"))
+		else if (type.equals("sbyte"))
 			t = ByteType.v();
-		else if (type.equals("void"))
+		else if (type.equals("ubyte"))
+			t = UByteType.v();
+		else if (type.equals("byte")) {
+			if (Options.v().src_prec() == Options.src_prec_dotnet)
+				t = UByteType.v();
+			else
+				t = ByteType.v();
+		} else if (type.equals("void"))
 			t = VoidType.v();
 		else {
 			// Do not create types for stuff that isn't loaded in the current
