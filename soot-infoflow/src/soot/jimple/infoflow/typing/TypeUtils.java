@@ -190,19 +190,16 @@ public class TypeUtils {
 
 	/**
 	 * Gets the more precise one of the two given types. If there is no ordering
-	 * (i.e., the two types are not cast-compatible) null is returned.
-	 * IMPORTANT: this method is not commutative on array types. The second type must
-	 * always be the declared type, which is used to infer the array depth.
-	 * Consider, for example, the case
-	 *   objArr[i] = str;
-	 * where we can narrow the type of objArr to String[]. Vice versa,
-	 *   obj = strArr[i];
-	 * allows us to narrow the type of obj to String. Therefore,
-	 * getMorePreciseType(String, Object[]) should return String[] and
-	 * getMorePreciseType(Object[], String) should return String.
+	 * (i.e., the two types are not cast-compatible) null is returned. IMPORTANT:
+	 * this method is not commutative on array types. The second type must always be
+	 * the declared type, which is used to infer the array depth. Consider, for
+	 * example, the case objArr[i] = str; where we can narrow the type of objArr to
+	 * String[]. Vice versa, obj = strArr[i]; allows us to narrow the type of obj to
+	 * String. Therefore, getMorePreciseType(String, Object[]) should return
+	 * String[] and getMorePreciseType(Object[], String) should return String.
 	 *
 	 * @param possibleRefinement The first type
-	 * @param declType The second type
+	 * @param declType           The second type
 	 * @return The more precise one of the two given types
 	 */
 	public Type getMorePreciseType(Type possibleRefinement, Type declType) {
@@ -217,6 +214,8 @@ public class TypeUtils {
 			if (morePreciseType != null)
 				return ArrayType.v(morePreciseType, at.numDimensions);
 		} else if (possibleRefinement instanceof ArrayType) {
+			if (TypeUtils.isObjectLikeType(declType))
+				return possibleRefinement;
 			return getMorePreciseType(((ArrayType) possibleRefinement).baseType, declType);
 		} else {
 			final FastHierarchy fastHierarchy = scene.getOrMakeFastHierarchy();
