@@ -1670,7 +1670,7 @@ public abstract class AbstractInfoflow implements IInfoflow {
 		private final SinkInfo sinkInfo;
 		private final SourceSinkState state;
 
-		protected SourceOrSink(SourceInfo sourceInfo, SinkInfo sinkInfo) {
+		public SourceOrSink(SourceInfo sourceInfo, SinkInfo sinkInfo) {
 			this.sourceInfo = sourceInfo;
 			this.sinkInfo = sinkInfo;
 			if (sourceInfo != null && sinkInfo == null)
@@ -1683,15 +1683,15 @@ public abstract class AbstractInfoflow implements IInfoflow {
 				this.state = SourceSinkState.NEITHER;
 		}
 
-		protected SourceSinkState getState() {
+		public SourceSinkState getState() {
 			return state;
 		}
 
-		protected SourceInfo getSourceInfo() {
+		public SourceInfo getSourceInfo() {
 			return sourceInfo;
 		}
 
-		protected SinkInfo getSinkInfo() {
+		public SinkInfo getSinkInfo() {
 			return sinkInfo;
 		}
 
