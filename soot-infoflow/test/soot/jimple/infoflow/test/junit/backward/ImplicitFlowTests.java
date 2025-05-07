@@ -17,8 +17,7 @@ public class ImplicitFlowTests extends soot.jimple.infoflow.test.junit.ImplicitF
 			+ "see until further up in the code, i.e., later in the analysis")
 	@Override
 	public void dataClassSetterTest() {
-		// TODO Auto-generated method stub
-		super.dataClassSetterTest();
+		//
 	}
 
 }
