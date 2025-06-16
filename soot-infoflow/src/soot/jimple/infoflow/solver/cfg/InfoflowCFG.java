@@ -293,6 +293,11 @@ public class InfoflowCFG implements IInfoflowCFG {
 	}
 
 	@Override
+	public List<Value> getParameterRefs(SootMethod sootMethod) {
+		return List.of();
+	}
+
+	@Override
 	public boolean isReturnSite(Unit n) {
 		return delegate.isReturnSite(n);
 	}

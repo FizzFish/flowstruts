@@ -6,9 +6,9 @@ import java.util.List;
 
 import soot.jimple.infoflow.IInfoflow;
 import soot.jimple.infoflow.Infoflow;
-import soot.jimple.infoflow.entryPointCreators.DefaultEntryPointCreator;
 import soot.jimple.infoflow.sourcesSinks.manager.DefaultSourceSinkManager;
 import soot.jimple.infoflow.sourcesSinks.manager.ISourceSinkManager;
+
 
 /**
  * Simple example that runs FlowDroid on a struts-core JAR file.
@@ -30,10 +30,10 @@ public class StrutsInfoflowExample {
         String libPath = args[1];
 
         List<String> entryPoints = new ArrayList<>();
-        entryPoints.add("<org.apache.struts.action.StrutsPrepareAndExecuteFilter: void doFilter(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse,javax.servlet.FilterChain)>");
+        String strutsEntry = "<org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter: void doFilter(javax.servlet.ServletRequest,javax.servlet.ServletResponse,javax.servlet.FilterChain)>";
+        entryPoints.add(strutsEntry);
 
         List<String> sources = Arrays.asList(
-                "<javax.servlet.http.HttpServletRequest: java.lang.String getParameter(java.lang.String)>",
                 "<org.apache.commons.fileupload.RequestContext: java.lang.String getContentType()>"
         );
 
@@ -44,7 +44,8 @@ public class StrutsInfoflowExample {
         ISourceSinkManager ssm = new DefaultSourceSinkManager(sources, sinks);
 
         IInfoflow infoflow = new Infoflow();
-        infoflow.computeInfoflow(appPath, libPath, new DefaultEntryPointCreator(entryPoints), ssm);
+        infoflow.getConfig().setLogSourcesAndSinks(true);
+        infoflow.computeInfoflow(appPath, libPath, strutsEntry, ssm);
 
         System.out.println(infoflow.getResults());
     }
