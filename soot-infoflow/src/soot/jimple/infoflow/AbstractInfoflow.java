@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,8 +190,8 @@ public abstract class AbstractInfoflow implements IInfoflow {
 	protected IPropagationRuleManagerFactory ruleManagerFactory = initializeRuleManagerFactory();
 	protected IPropagationRuleManagerFactory reverseRuleManagerFactory = initializeReverseRuleManagerFactory();
 
-	protected Set<Stmt> collectedSources;
-	protected Set<Stmt> collectedSinks;
+	protected Set<Pair<SootMethod, Stmt>> collectedSources;
+	protected Set<Pair<SootMethod, Stmt>> collectedSinks;
 
 	protected SootMethod dummyMainMethod;
 	protected Collection<SootMethod> additionalEntryPointMethods;
@@ -781,9 +782,10 @@ public abstract class AbstractInfoflow implements IInfoflow {
 			logger.error("No source/sink manager specified");
 			return;
 		}
-
-		initializeSoot(appPath, libPath, SootMethodRepresentationParser.v()
-				.parseClassNames(Collections.singletonList(entryPoint), false).keySet(), entryPoint);
+        Set<String> classes = new HashSet<>(SootMethodRepresentationParser.v()
+                .parseClassNames(Collections.singletonList(entryPoint), false).keySet());
+//		classes.add("org.apache.struts2.dispatcher.multipart.JakartaMultiPartRequest");
+		initializeSoot(appPath, libPath, classes, entryPoint);
 
 		if (!Scene.v().containsMethod(entryPoint)) {
 			logger.error("Entry point not found: " + entryPoint);
@@ -1788,13 +1790,13 @@ public abstract class AbstractInfoflow implements IInfoflow {
 						s.addTag(FlowDroidSourceStatement.INSTANCE);
 					forwardProblem.addInitialSeeds(s, Collections.singleton(forwardProblem.zeroValue()));
 					if (getConfig().getLogSourcesAndSinks())
-						collectedSources.add(s);
+						collectedSources.add(new Pair<>(m, s));
 					break;
 				case SINK:
 					if (s.containsInvokeExpr())
 						s.addTag(FlowDroidSinkStatement.INSTANCE);
 					if (getConfig().getLogSourcesAndSinks())
-						collectedSinks.add(s);
+						collectedSinks.add(new Pair<>(m, s));
 					sinkCount++;
 					break;
 				case BOTH:
@@ -1803,10 +1805,11 @@ public abstract class AbstractInfoflow implements IInfoflow {
 							s.addTag(FlowDroidSourceStatement.INSTANCE);
 						s.addTag(FlowDroidSinkStatement.INSTANCE);
 					}
+					Pair<SootMethod, Stmt> pair = new Pair<>(m, s);
 					forwardProblem.addInitialSeeds(s, Collections.singleton(forwardProblem.zeroValue()));
 					if (getConfig().getLogSourcesAndSinks()) {
-						collectedSources.add(s);
-						collectedSinks.add(s);
+						collectedSources.add(pair);
+						collectedSinks.add(pair);
 					}
 					sinkCount++;
 					break;
@@ -2114,12 +2117,12 @@ public abstract class AbstractInfoflow implements IInfoflow {
 
 	@Override
 	public Set<Stmt> getCollectedSources() {
-		return this.collectedSources;
+		return this.collectedSources.stream().map(Pair::getO2).collect(Collectors.toSet());
 	}
 
 	@Override
 	public Set<Stmt> getCollectedSinks() {
-		return this.collectedSinks;
+		return this.collectedSinks.stream().map(Pair::getO2).collect(Collectors.toSet());
 	}
 
 	/**
