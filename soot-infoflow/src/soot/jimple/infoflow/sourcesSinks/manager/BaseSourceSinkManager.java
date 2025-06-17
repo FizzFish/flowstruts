@@ -327,7 +327,8 @@ public abstract class BaseSourceSinkManager
 				if (!def.isEmpty())
 					return def;
 			}
-
+			if (sm == null)
+				return Collections.emptySet();
 			final String subSig = sm.getSubSignature();
 
 			// Check whether we have any of the interfaces on the list

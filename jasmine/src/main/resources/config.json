@@ -1,0 +1,5 @@
+{
+  "source": "src/main/resources/source.json",
+  "main_class": "com.macro.mall.MallAdminApplication",
+  "edge_config": "src/main/resources/config.properties"
+}
