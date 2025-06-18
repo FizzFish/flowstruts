@@ -28,7 +28,7 @@ public class EntryPointManager {
     public void loadJavaEntryPoints() {
 
         Chain<SootClass> classes = Scene.v().getApplicationClasses();
-        HashSet<String> customizeEntryPoints = getCustomizeEntryPoints();
+//        HashSet<String> customizeEntryPoints = getCustomizeEntryPoints();
 
         for (SootClass sc : classes) {
             for (SootMethod method : sc.getMethods()) {

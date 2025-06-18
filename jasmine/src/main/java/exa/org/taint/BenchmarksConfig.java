@@ -11,6 +11,9 @@ public class BenchmarksConfig {
             case "demo":
                 dir.add("../demo/target-demo-0.0.1/BOOT-INF/classes");
                 return dir;
+            case "struts":
+                dir.add("../demo/struts");
+                return dir;
             case "pybbs":
                 dir.add(basePath + "/pybbs/BOOT-INF/classes");
                 return dir;
