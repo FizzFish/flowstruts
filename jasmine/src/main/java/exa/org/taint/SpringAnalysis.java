@@ -10,39 +10,22 @@ import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 
 public class SpringAnalysis {
     public static  String SOURCE_FILE_NAME ;
-    public static  String MAIN_CLASS;
-    public static  String EDGE_CONFIG_PROPERTIES;
-    public static String benchmark = "demo";
+    private static String target;
     public static String analysisAlgorithm = "jasmine";
-    private void loadConstant() throws IOException {
-        String configFile = "src/main/resources/config.json";
-        if (benchmark.equals("demo"))
-            configFile = "src/main/resources/config-demo.json";
-        String configFileInfo = FileUtils.readFileToString(new File(configFile), "UTF-8");
-        Gson gson = new Gson();
-        HashMap<String, String> map =  gson.fromJson(configFileInfo, HashMap.class);
-        SOURCE_FILE_NAME = map.get("source");
-        MAIN_CLASS = map.get("main_class");
-        EDGE_CONFIG_PROPERTIES = map.get("edge_config");
+
+    public SpringAnalysis(String target) throws IOException {
+        this.target = target;
+
     }
-    public void analysis() throws IOException {
-        //Load the path information in source.json file.
-        loadConstant();
+    public void analysis(String config) throws IOException {
         //SetUpApplication implements a common interface that supports all data flow analysis of taint wrappers.
-        SpringSetupApplication application = new SpringSetupApplication();
-
-        //Create and set up a taint wrapper
-
-        File taintWrapperFile = new File(System.getProperty("user.dir") + File.separator + "EasyTaintWrapperSource.txt");
-        application.setTaintWrapper((new EasyTaintWrapper(taintWrapperFile)));
-
+        SpringSetupApplication application = new SpringSetupApplication(target, config);
         //The main part of the program
-        String sourceAndSink = "SourcesAndSinks-"+ benchmark +".txt";
-        if (benchmark.equals("demo"))
-            sourceAndSink = "SourcesAndSinks.txt";
-        application.runInfoflow(sourceAndSink);
+        application.runInfoflow();
     }
     public static void main(String []args) throws IOException {
-        new SpringAnalysis().analysis();
+        String target = "demo";
+        String config = "src/main/resources/config.json";
+        new SpringAnalysis(target).analysis(config);
     }
 }

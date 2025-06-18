@@ -46,18 +46,18 @@ public class CreateEdge {
     protected String dummyClassName = "synthetic.method.dummyMainClass";
     public SootMethod projectMainMethod;
 
-    public void initCallGraph(String configPath) {
+    public void initCallGraph(String beanXml, String mainClass) {
         try {
             // Scan the entire project, get and classify all beans
-            scanAllBeans(configPath);
+            scanAllBeans(beanXml);
             // Scan the entire project, get and classify all beans
-            aspectAnalysis(configPath);
+            aspectAnalysis(beanXml);
             // Handling aspect-oriented programming (XML)
             //xmlaspectAnalysis(configPath);
             // Handling dependency injection logic
             dependencyInjectAnalysis();
             // Build entry points
-            generateEntryPoints();
+            generateEntryPoints(mainClass);
         } catch (Exception ignored) {
             ignored.printStackTrace();
         }
@@ -66,10 +66,12 @@ public class CreateEdge {
     /**
      * Scan the entire project to get all beans
      *
-     * @param configPath  The path of the xml configuration file, it can be multiple, pass in a set collection to store multiple xml paths
+     * @param beanXml  The path of the xml configuration file, it can be multiple, pass in a set collection to store multiple xml paths
      */
-    private void scanAllBeans(String configPath) {
-        Set<String> bean_xml_paths = FileUtils.getBeanXmlPaths(configPath, "bean_xml_paths");
+    private void scanAllBeans(String beanXml) {
+        Set<String> bean_xml_paths = new HashSet<>();
+        if (beanXml != null)
+            bean_xml_paths.add(beanXml);
         if (bean_xml_paths.size() > 0) {
             Set<XmlBeanClazz> xmlBeanSootClazzes = getXMLBeanSootClazzes(bean_xml_paths);
             for (XmlBeanClazz xmlBeanSootClazz : xmlBeanSootClazzes) {
@@ -195,8 +197,8 @@ public class CreateEdge {
         }
     }
 
-    private void generateEntryPoints() {
-        SootMethod psm = findMainMethod();
+    private void generateEntryPoints(String mainClass) {
+        SootMethod psm = findMainMethod(Scene.v().getSootClass(mainClass));
         if (psm == null) {
             SootClass sClass = new SootClass(dummyClassName, Modifier.PUBLIC);
             sClass.setSuperclass(Scene.v().getSootClass("java.lang.Object"));
@@ -216,17 +218,14 @@ public class CreateEdge {
         projectMainMethod = psm;
     }
 
-    private SootMethod findMainMethod() {
-        Collection<SootClass> elementsUnsorted = sootClassChain.getElementsUnsorted();
-        for (SootClass sootClass : elementsUnsorted) {
-            List<SootMethod> sootMethods = sootClass.getMethods();
-            if (sootMethods.size() > 1) {
-                for (SootMethod sootMethod : sootMethods) {
-                    if (sootMethod.getSubSignature().contains("void main") && sootMethod.isStatic()) {
-                        for (Unit unit : sootMethod.retrieveActiveBody().getUnits()) {
-                            if (unit.toString().contains("SpringApplication")) {
-                                return sootMethod;
-                            }
+    private SootMethod findMainMethod(SootClass sootClass) {
+        List<SootMethod> sootMethods = sootClass.getMethods();
+        if (sootMethods.size() > 1) {
+            for (SootMethod sootMethod : sootMethods) {
+                if (sootMethod.getSubSignature().contains("void main") && sootMethod.isStatic()) {
+                    for (Unit unit : sootMethod.retrieveActiveBody().getUnits()) {
+                        if (unit.toString().contains("SpringApplication")) {
+                            return sootMethod;
                         }
                     }
                 }
@@ -297,7 +296,7 @@ public class CreateEdge {
     /**
      * Handle the logic of aspect-oriented programming
      */
-    private void aspectAnalysis(String configPath) {
+    private void aspectAnalysis(String beanXml) {
         AOPParser aopParser = new AOPParser();
         Set<SootClass> allComponents = new HashSet<>(interfaceToBeans.values());
         List<AspectModel> allAspects = aopParser.getAllAspects(allComponents);
@@ -357,7 +356,7 @@ public class CreateEdge {
             }
         }
 
-        allAdvices.addAll(xmlaspectAnalysis(configPath, aopParser));
+        allAdvices.addAll(xmlaspectAnalysis(beanXml, aopParser));
         aopParser.addAdviceToTarget(allAdvices);
         for (AOPTargetModel aopTargetModel : AOPParser.modelMap.values()) {
             aopAnalysis.processWeave(aopTargetModel);
@@ -445,10 +444,12 @@ public class CreateEdge {
      *
      * @return
      */
-    private List<AspectModel> xmlaspectAnalysis(String configPath, AOPParser aopParser) {
+    private List<AspectModel> xmlaspectAnalysis(String beanXml, AOPParser aopParser) {
         XMLDocumentHolder holder = new XMLDocumentHolder();
         List<AspectModel> allAdvices = new ArrayList<>();
-        Set<String> bean_xml_paths = FileUtils.getBeanXmlPaths(configPath, "bean_xml_paths");
+        Set<String> bean_xml_paths = new HashSet<>();
+        if (beanXml != null)
+            bean_xml_paths.add(beanXml);
         if (bean_xml_paths.size() == 0) {
             return allAdvices;
         }

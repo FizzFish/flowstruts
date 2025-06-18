@@ -1,5 +1,7 @@
 package exa.org.taint;
 
+import com.google.gson.Gson;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.Main;
@@ -10,6 +12,7 @@ import soot.jimple.infoflow.android.iccta.IccInstrumenter;
 import soot.jimple.infoflow.android.source.AccessPathBasedSourceSinkManager;
 import soot.jimple.infoflow.solver.memory.DefaultMemoryManagerFactory;
 import soot.jimple.infoflow.sourcesSinks.definitions.ISourceSinkDefinitionProvider;
+import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintWrapperDataFlowAnalysis;
 import soot.options.Options;
@@ -25,6 +28,9 @@ import java.util.stream.Stream;
 
 public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
     private final Logger logger = LoggerFactory.getLogger(SpringSetupApplication.class);
+    private final String mainClass;
+    private final String beanXml;
+    private final String sourceSinkFile;
     // The analysis results are taken from an external model that contains method summaries
     // (this can improve performance and help when the source is not available).
     private ITaintPropagationWrapper taintWrapper;
@@ -32,6 +38,18 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
     private InfoflowAndroidConfiguration config;
 
     protected IccInstrumenter iccInstrumenter = null;
+    private String benchmark;
+
+    public SpringSetupApplication(String benchmark, String config) throws IOException {
+        this.benchmark = benchmark;
+        String configFileInfo = FileUtils.readFileToString(new File(config), "UTF-8");
+        Gson gson = new Gson();
+        HashMap<String, String> map =  gson.fromJson(configFileInfo, HashMap.class);
+        mainClass = map.get("main_class");
+        beanXml = map.get("beam_xml_paths");
+        sourceSinkFile = map.get("sourceAndSinks");
+        setTaintWrapper((new EasyTaintWrapper(map.get("taintSummary"))));
+    }
 
     @Override
     public void setTaintWrapper(ITaintPropagationWrapper taintWrapper) {
@@ -43,7 +61,7 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
         return taintWrapper;
     }
 
-    public void runInfoflow(String sourceSinkFile) {
+    public void runInfoflow() {
         try {
             // Read out the source and sink information and put it into pmp, which is a subclass of parser
             // If you add source and sink information, follow the format of the file and save to file or
@@ -80,12 +98,11 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
     private void createMainMethod() {
         if (SpringAnalysis.analysisAlgorithm.equals("jasmine")) {
             CreateEdge edge = new CreateEdge();
-            String path = System.getProperty("user.dir") + File.separator + "src/main/resources/config.properties";
-            edge.initCallGraph(path);
+            edge.initCallGraph(beanXml, mainClass);
             System.out.println("MainClass: " + edge.projectMainMethod.getDeclaringClass());
             Scene.v().setMainClass(edge.projectMainMethod.getDeclaringClass());
         } else {
-            ArrayList<SootMethod> entryPoints = EntryPointConfig.getEntryPoints(SpringAnalysis.benchmark);
+            ArrayList<SootMethod> entryPoints = EntryPointConfig.getEntryPoints(benchmark);
             Scene.v().setEntryPoints(entryPoints);
         }
     }
@@ -105,7 +122,7 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
         logger.info("Initializing Soot...");
 
         G.reset();
-        List<String> dir = BenchmarksConfig.getSourceProcessDir(SpringAnalysis.benchmark);
+        List<String> dir = BenchmarksConfig.getSourceProcessDir(benchmark);
 
         if (SpringAnalysis.analysisAlgorithm.equals("spark") || SpringAnalysis.analysisAlgorithm.equals("jasmine")) {
             // 开启spack
@@ -166,7 +183,7 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
         return sootCp;
     }
 
-    private static String getSootClassPath() {
+    private String getSootClassPath() {
         String userdir = System.getProperty("user.dir");
         String javaHome = System.getProperty("java.home");
         if (javaHome == null || javaHome.equals(""))
@@ -174,7 +191,7 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
         String sootCp = "../struts/rt.jar";
 //        sootCp += File.pathSeparator + javaHome + File.separator + "lib" + File.separator + "jce.jar";
 
-        String dependencyDirectory = BenchmarksConfig.getDependencyDir(SpringAnalysis.benchmark);
+        String dependencyDirectory = BenchmarksConfig.getDependencyDir(benchmark);
 
         File file = new File(dependencyDirectory);
         File[] fs = file.listFiles();

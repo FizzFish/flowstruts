@@ -17,16 +17,14 @@ public class StrutsAnalysis {
 
 
     public void analysis() throws IOException {
-        // Load configuration
-//        loadConstant();
         StrutsSetupApplication application = new StrutsSetupApplication();
 
         // Create taint wrapper
-        File taintWrapperFile = new File(System.getProperty("user.dir") + File.separator + "EasyTaintWrapperSource.txt");
+        File taintWrapperFile = new File("EasyTaintWrapperSource.txt");
         application.setTaintWrapper(new EasyTaintWrapper(taintWrapperFile));
 
         // Run the analysis
-        application.runInfoflow(System.getProperty("user.dir") + File.separator + "SourcesAndSinks-struts.txt");
+        application.runInfoflow( "SourcesAndSinks-struts.txt");
     }
 
     public static void main(String[] args) throws IOException {
