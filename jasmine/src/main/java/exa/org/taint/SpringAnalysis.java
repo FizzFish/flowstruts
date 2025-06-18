@@ -12,10 +12,12 @@ public class SpringAnalysis {
     public static  String SOURCE_FILE_NAME ;
     public static  String MAIN_CLASS;
     public static  String EDGE_CONFIG_PROPERTIES;
-    public static String benchmark = "mall-admin";
+    public static String benchmark = "demo";
     public static String analysisAlgorithm = "jasmine";
     private void loadConstant() throws IOException {
         String configFile = "src/main/resources/config.json";
+        if (benchmark.equals("demo"))
+            configFile = "src/main/resources/config-demo.json";
         String configFileInfo = FileUtils.readFileToString(new File(configFile), "UTF-8");
         Gson gson = new Gson();
         HashMap<String, String> map =  gson.fromJson(configFileInfo, HashMap.class);
@@ -35,7 +37,10 @@ public class SpringAnalysis {
         application.setTaintWrapper((new EasyTaintWrapper(taintWrapperFile)));
 
         //The main part of the program
-        application.runInfoflow(System.getProperty("user.dir") + File.separator + "SourcesAndSinks-"+ benchmark +".txt");
+        String sourceAndSink = "SourcesAndSinks-"+ benchmark +".txt";
+        if (benchmark.equals("demo"))
+            sourceAndSink = "SourcesAndSinks.txt";
+        application.runInfoflow(sourceAndSink);
     }
     public static void main(String []args) throws IOException {
         new SpringAnalysis().analysis();

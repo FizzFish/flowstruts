@@ -60,7 +60,7 @@ public abstract class AbstractResultSourceSinkInfo {
 	public int hashCode() {
 		final int prime = 31;
 		int result = (InfoflowConfiguration.getOneResultPerAccessPath() ? 31 * this.accessPath.hashCode() : 0);
-		result = prime * result + ((definition == null) ? 0 : definition.hashCode());
+//		result = prime * result + ((definition == null) ? 0 : definition.hashCode());
 		result = prime * result + ((stmt == null) ? 0 : stmt.hashCode());
 		result = prime * result + ((userData == null) ? 0 : userData.hashCode());
 		return result;
@@ -78,11 +78,11 @@ public abstract class AbstractResultSourceSinkInfo {
 		if (InfoflowConfiguration.getOneResultPerAccessPath() && !this.accessPath.equals(si.accessPath))
 			return false;
 
-		if (definition == null) {
-			if (si.definition != null)
-				return false;
-		} else if (!definition.equals(si.definition))
-			return false;
+//		if (definition == null) {
+//			if (si.definition != null)
+//				return false;
+//		} else if (!definition.equals(si.definition))
+//			return false;
 		if (stmt == null) {
 			if (si.stmt != null)
 				return false;

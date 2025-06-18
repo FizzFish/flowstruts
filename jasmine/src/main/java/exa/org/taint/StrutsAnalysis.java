@@ -38,7 +38,7 @@ public class StrutsAnalysis {
         application.setTaintWrapper(new EasyTaintWrapper(taintWrapperFile));
 
         // Run the analysis
-        application.runInfoflow(System.getProperty("user.dir") + File.separator + "SourcesAndSinks-" + benchmark + ".txt");
+        application.runInfoflow(System.getProperty("user.dir") + File.separator + "SourcesAndSinks.txt");
     }
 
     public static void main(String[] args) throws IOException {

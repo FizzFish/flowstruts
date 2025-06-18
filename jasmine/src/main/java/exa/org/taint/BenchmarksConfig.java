@@ -8,6 +8,9 @@ public class BenchmarksConfig {
     public static List<String> getSourceProcessDir(String benchmark) {
         List<String> dir = new ArrayList<>();
         switch (benchmark) {
+            case "demo":
+                dir.add("../demo/target-demo-0.0.1/BOOT-INF/classes");
+                return dir;
             case "pybbs":
                 dir.add(basePath + "/pybbs/BOOT-INF/classes");
                 return dir;
@@ -125,6 +128,8 @@ public class BenchmarksConfig {
 
     public static String getDependencyDir(String benchmark) {
         switch (benchmark) {
+            case "demo":
+                return "../demo/target-demo-0.0.1/BOOT-INF/lib";
             case "pybbs":
                 return basePath + "/pybbs/BOOT-INF/lib";
             case "shopizer":
