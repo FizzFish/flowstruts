@@ -1,7 +1,0 @@
-{
-  "main_class": "com.macro.mall.MallAdminApplication",
-  "sourceAndSinks": "SourcesAndSinks-mall-admin.txt",
-  "taintSummary": "EasyTaintWrapperSource.txt",
-  "source": null,
-  "beam_xml_paths": null
-}

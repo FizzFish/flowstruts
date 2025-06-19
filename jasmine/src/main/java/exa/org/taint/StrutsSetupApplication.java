@@ -73,7 +73,8 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
             edge.initCallGraph();
             Scene.v().setMainClass(edge.projectMainMethod.getDeclaringClass());
         } else {
-            ArrayList<SootMethod> entryPoints = EntryPointConfig.getEntryPoints(StrutsAnalysis.benchmark);
+            String benchmark = StrutsAnalysis.v().getBenchmark();
+            ArrayList<SootMethod> entryPoints = EntryPointConfig.getEntryPoints(benchmark);
             Scene.v().setEntryPoints(entryPoints);
         }
     }
@@ -90,7 +91,8 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
         logger.info("Initializing Soot...");
 
         G.reset();
-        List<String> dir = BenchmarksConfig.getSourceProcessDir(StrutsAnalysis.benchmark);
+        List<String> dir = new ArrayList<>();
+        dir.add(StrutsAnalysis.v().getProcessDir());
 
         if (StrutsAnalysis.analysisAlgorithm.equals("spark") || StrutsAnalysis.analysisAlgorithm.equals("jasmine")) {
             Options.v().setPhaseOption("cg.spark", "on");
@@ -146,23 +148,7 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
     }
 
     private static String getSootClassPath() {
-        String javaHome = System.getProperty("java.home");
-        if (javaHome == null || javaHome.equals(""))
-            throw new RuntimeException("Could not get property java.home!");
-        String sootCp = "../struts/rt.jar";
-
-        String dependencyDirectory = BenchmarksConfig.getDependencyDir(StrutsAnalysis.benchmark);
-
-        File file = new File(dependencyDirectory);
-        File[] fs = file.listFiles();
-        if (fs != null) {
-            for (File f : fs) {
-                if (!f.isDirectory())
-                    sootCp += File.pathSeparator + dependencyDirectory + File.separator + f.getName();
-            }
-        }
-
-        return sootCp;
+        return StrutsAnalysis.v().getLibPath();
     }
 
     private void configureCallgraph() {

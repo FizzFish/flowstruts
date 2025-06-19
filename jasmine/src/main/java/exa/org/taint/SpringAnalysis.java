@@ -25,7 +25,7 @@ public class SpringAnalysis {
     }
     public static void main(String []args) throws IOException {
         String target = "demo";
-        String config = "src/main/resources/config.json";
+        String config = String.format("src/main/resources/config-%s.json", target);
         new SpringAnalysis(target).analysis(config);
     }
 }

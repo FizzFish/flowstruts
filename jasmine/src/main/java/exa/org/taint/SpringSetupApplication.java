@@ -188,8 +188,7 @@ public class SpringSetupApplication implements ITaintWrapperDataFlowAnalysis {
         String javaHome = System.getProperty("java.home");
         if (javaHome == null || javaHome.equals(""))
             throw new RuntimeException("Could not get property java.home!");
-        String sootCp = "../struts/rt.jar";
-//        sootCp += File.pathSeparator + javaHome + File.separator + "lib" + File.separator + "jce.jar";
+        String sootCp = "../benchmark/rt.jar";
 
         String dependencyDirectory = BenchmarksConfig.getDependencyDir(benchmark);
 
