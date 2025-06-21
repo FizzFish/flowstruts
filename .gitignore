@@ -1,6 +1,10 @@
 soot-infoflow/jimpleCode/
 soot-infoflow-summaries/build/
 soot-infoflow-summaries/target/
+benchmark/
+struts/
+android-dir/
+jasmine/sootOutput/
 /.metadata
 /.recommenders
 .idea/

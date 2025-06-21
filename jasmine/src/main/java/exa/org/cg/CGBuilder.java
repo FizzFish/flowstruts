@@ -2,6 +2,8 @@ package exa.org.cg;
 
 import exa.org.taint.StrutsAnalysis;
 import exa.org.utils.JimpleUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
 import soot.jimple.spark.SparkTransformer;
@@ -16,10 +18,13 @@ import soot.options.SparkOptions;
 import soot.util.Chain;
 import soot.util.queue.QueueReader;
 
+import java.nio.file.Paths;
 import java.util.*;
 
 public class CGBuilder {
+    protected static final Logger logger = LoggerFactory.getLogger(CGBuilder.class);
     private SootMethod projectMainMethod;
+    private Map<String, String> map;
     private void compute() {
         Chain<SootClass> classes = Scene.v().getApplicationClasses();
         System.out.println("compute functions");
@@ -36,6 +41,10 @@ public class CGBuilder {
             }
         }
         System.out.printf("a=%d,b=%d\n",a,b);
+    }
+    public CGBuilder() {
+        String path = "../benchmark/struts-045";
+        map = new IoCConfigLoader(Paths.get(path)).getBeanMap();
     }
     private void generateEntryPoints() {
         SootClass sClass = new SootClass("synthetic.struts.dummyMainClass", Modifier.PUBLIC);
@@ -202,7 +211,8 @@ public class CGBuilder {
                 if (!(ie instanceof InstanceInvokeExpr)) continue; // static ≠ 虚调用
 
                 // —— ② 用 CHA 找所有实现 / 覆写版本 ——
-                List<SootMethod> targets = getCHA(ie);
+//                List<SootMethod> targets = getCHA(ie);
+                List<SootMethod> targets = smartInfer(ie);
 
                 if (targets.isEmpty()) continue;            // 兜底仍找不到 → 保持空
                 for (SootMethod target : targets) {
@@ -213,6 +223,40 @@ public class CGBuilder {
         }
 
         return changed;
+    }
+
+    private List<SootMethod> smartInfer(InvokeExpr invokeExpr) {
+        List<SootMethod> out = new ArrayList<>();
+        Hierarchy hier = Scene.v().getActiveHierarchy();
+        SootMethod declared = invokeExpr.getMethod();
+        String subSig       = declared.getSubSignature();
+        SootClass baseClass = declared.getDeclaringClass();
+
+        if (!baseClass.isApplicationClass())
+            return out;
+
+        boolean concrete = baseClass.isConcrete();
+
+        if (concrete) {
+            // 1. 枚举可能实现
+            Collection<SootClass> kids = hier.getSubclassesOf(baseClass);
+            if (kids.isEmpty()) {
+                logger.info("add {} in callSite {}", baseClass, invokeExpr);
+                return Collections.singletonList(declared);
+            }
+        }
+
+        String baseName = baseClass.getName();
+        String implName = map.get(baseName);
+        if (implName != null) {
+            SootClass impl = Scene.v().getSootClass(implName);
+            if (impl.declaresMethod(subSig)) {
+                logger.info("add {} for base {} in callSite {}", impl, baseClass, invokeExpr);
+                out.add(impl.getMethodUnsafe(subSig));
+                return out;
+            }
+        }
+        return out;
     }
 
     public static void main(String[] args) {
