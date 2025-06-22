@@ -21,7 +21,7 @@ public class IoCConfigLoader {
 
     /**  type  ->  ( name -> implClass ) */
     private final Map<String, Map<String,String>> beanTable = new HashMap<>();
-    private final Map<String, String> beanMap = new HashMap<>();
+    private final Map<String, Set<String>> beanMap = new HashMap<>();
     /**  constant  key -> value */
     private final Map<String,String> constTable = new HashMap<>();
 
@@ -29,10 +29,7 @@ public class IoCConfigLoader {
         parse(confDir);
     }
 
-    public String getImpl(String type) {
-        return beanMap.get(type);
-    }
-    public Map<String, String> getBeanMap() {
+    public Map<String, Set<String>> getBeanMap() {
         return beanMap;
     }
 
@@ -49,16 +46,16 @@ public class IoCConfigLoader {
             Files.walk(confDir)
                     .filter(p -> p.toString().endsWith(".properties"))
                     .forEach(p -> parseProperties(p.toFile()));
-            beanTable.keySet().forEach((type) -> {
-                if (getImpl(type)!= null)
-                    beanMap.put(type, getImpl(type));
-            });
+
             beanTable.forEach((type, val) -> {
                 String impl = getDefaultImpl(type);
+                Set<String> set = new HashSet<>();
                 if (impl != null)
-                    beanMap.put(type, impl);
+                    set.add(impl);
+                else
+                    set.addAll(val.values());
+                beanMap.put(type, set);
             });
-
         } catch (IOException e) {
             System.err.println("[CFG] scanning error: " + e);
         }
@@ -131,8 +128,7 @@ public class IoCConfigLoader {
         IoCConfigLoader cfg =
                  new IoCConfigLoader(Paths.get("../benchmark/struts-045"));
 
-        String impl =
-                cfg.getImpl("org.apache.struts2.dispatcher.multipart.MultiPartRequest");
+        Set<String> impl = cfg.getBeanMap().get("org.apache.struts2.dispatcher.multipart.MultiPartRequest");
 
         System.out.println("选择的 MultiPartRequest 实现 = " + impl);
         // 预期输出：org.apache.struts2.dispatcher.multipart.JakartaStreamMultiPartRequest

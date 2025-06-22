@@ -24,7 +24,9 @@ import java.util.*;
 public class CGBuilder {
     protected static final Logger logger = LoggerFactory.getLogger(CGBuilder.class);
     private SootMethod projectMainMethod;
-    private Map<String, String> map;
+    private Map<String, Set<String>> map;
+    private Map<String, Set<SootMethod>> inferCache = new HashMap<>();
+    private String path;
     private void compute() {
         Chain<SootClass> classes = Scene.v().getApplicationClasses();
         System.out.println("compute functions");
@@ -42,8 +44,8 @@ public class CGBuilder {
         }
         System.out.printf("a=%d,b=%d\n",a,b);
     }
-    public CGBuilder() {
-        String path = "../benchmark/struts-045";
+    public CGBuilder(String path) {
+        this.path = path;
         map = new IoCConfigLoader(Paths.get(path)).getBeanMap();
     }
     private void generateEntryPoints() {
@@ -84,7 +86,7 @@ public class CGBuilder {
     private void initializeSoot() {
         G.reset();
         List<String> dir = new ArrayList<>();
-        dir.add("../benchmark/struts-045");
+        dir.add(path);
 
         Options.v().setPhaseOption("cg.spark", "on");
         Options.v().setPhaseOption("cg.spark", "verbose:true");
@@ -139,53 +141,16 @@ public class CGBuilder {
 
             // ④ 对增量边做传播
             if (changed) {
-//                SparkOptions sopts = new SparkOptions(PhaseOptions.v().getPhaseOptions("cg.spark"));
                 Propagator propagator = new PropWorklist((PAG) pag);
                 propagator.propagate();   // 只增量迭代
             }
             loop++;
 
         } while (changed);
-        System.out.println(loop);
+        logger.debug("CG build loop: {}", loop);
         compute();
-//        showCG(cg);
     }
-    private List<SootMethod> getCHA(InvokeExpr invokeExpr) {
-        Hierarchy hier = Scene.v().getActiveHierarchy();
-        SootMethod declared = invokeExpr.getMethod();
-        String subSig       = declared.getSubSignature();
-        SootClass container = declared.getDeclaringClass();
 
-        List<SootMethod> targets = new ArrayList<>();
-
-// ---------- 1. 枚举可能实现 ----------
-        Collection<SootClass> candidates;
-        if (container.isInterface()) {
-            // 接口：取所有实现者（含子接口、接口自身）再过滤 concrete classes
-            candidates = new HashSet<>();
-            // a) 接口自己
-            candidates.add(container);
-            // b) 实现类 / 子接口
-            candidates.addAll(hier.getImplementersOf(container));
-        } else {
-            // 普通类：自身 + 子类
-            candidates = hier.getSubclassesOfIncluding(container);
-        }
-
-// ---------- 2. 筛选出真正声明了该方法的 concrete 类 ----------
-        for (SootClass sub : candidates) {
-            if (sub.isInterface() || sub.isPhantom())   // 跳过接口 & phantom
-                continue;
-
-            // 声明了同签名方法才算实现/覆写
-            if (sub.declaresMethod(subSig)) {
-                SootMethod impl = sub.getMethodUnsafe(subSig);
-                if (impl != null && impl.isConcrete())
-                    targets.add(impl);
-            }
-        }
-        return targets;
-    }
     private boolean addFallbackEdges(CallGraph cg, PointsToAnalysis pag) {
         boolean changed = false;
         List<SootMethod> newCallees = new ArrayList<>();
@@ -212,7 +177,8 @@ public class CGBuilder {
 
                 // —— ② 用 CHA 找所有实现 / 覆写版本 ——
 //                List<SootMethod> targets = getCHA(ie);
-                List<SootMethod> targets = smartInfer(ie);
+                Set<SootMethod> targets = infer(ie, src);
+
 
                 if (targets.isEmpty()) continue;            // 兜底仍找不到 → 保持空
                 for (SootMethod target : targets) {
@@ -224,43 +190,81 @@ public class CGBuilder {
 
         return changed;
     }
-
-    private List<SootMethod> smartInfer(InvokeExpr invokeExpr) {
-        List<SootMethod> out = new ArrayList<>();
+    private Set<SootMethod> infer(InvokeExpr invokeExpr, SootMethod src) {
         Hierarchy hier = Scene.v().getActiveHierarchy();
         SootMethod declared = invokeExpr.getMethod();
         String subSig       = declared.getSubSignature();
         SootClass baseClass = declared.getDeclaringClass();
-
+        if (inferCache.containsKey(subSig))
+            return inferCache.get(subSig);
+        Set<SootMethod> out = smartInfer( invokeExpr, declared, subSig, baseClass, hier);
+        inferCache.put(subSig, out);
+        if (out.size()>2)
+            logger.debug("{}:{} has {} targets in {} callsite", src.getDeclaringClass().getShortName(), src.getName(), out.size(), declared.getName());
+        return out;
+    }
+    private Set<SootMethod> smartInfer(InvokeExpr invokeExpr, SootMethod declared, String subSig, SootClass baseClass, Hierarchy hier) {
+        Set<SootMethod> out = new HashSet<>();
         if (!baseClass.isApplicationClass())
             return out;
 
         boolean concrete = baseClass.isConcrete();
 
         if (concrete) {
-            // 1. 枚举可能实现
+            // 1. 只有自己一个实现类
             Collection<SootClass> kids = hier.getSubclassesOf(baseClass);
             if (kids.isEmpty()) {
-                logger.info("add {} in callSite {}", baseClass, invokeExpr);
-                return Collections.singletonList(declared);
-            }
-        }
-
-        String baseName = baseClass.getName();
-        String implName = map.get(baseName);
-        if (implName != null) {
-            SootClass impl = Scene.v().getSootClass(implName);
-            if (impl.declaresMethod(subSig)) {
-                logger.info("add {} for base {} in callSite {}", impl, baseClass, invokeExpr);
-                out.add(impl.getMethodUnsafe(subSig));
+                out.add(declared);
                 return out;
             }
         }
-        return out;
+        // 2. 配置文件定义了具体实现类
+        String baseName = baseClass.getName();
+        for (String implName: map.getOrDefault(baseName, new HashSet<>())) {
+            SootClass impl = Scene.v().getSootClass(implName);
+            if (impl.declaresMethod(subSig)) {
+                out.add(impl.getMethodUnsafe(subSig));
+            }
+        }
+        if (!out.isEmpty())
+            return out;
+        // 3. 没有配置文件定义，用 CHA 兜底
+        return getCHA(invokeExpr, declared, subSig, baseClass, hier);
     }
 
+    private Set<SootMethod> getCHA(InvokeExpr invokeExpr, SootMethod declared, String subSig, SootClass baseClass, Hierarchy hier) {
+        Set<SootMethod> targets = new HashSet<>();
+
+// ---------- 1. 枚举可能实现 ----------
+        Collection<SootClass> candidates;
+        if (baseClass.isInterface()) {
+            // 接口：取所有实现者（含子接口、接口自身）再过滤 concrete classes
+            candidates = new HashSet<>();
+            // a) 接口自己
+            candidates.add(baseClass);
+            // b) 实现类 / 子接口
+            candidates.addAll(hier.getImplementersOf(baseClass));
+        } else {
+            // 普通类：自身 + 子类
+            candidates = hier.getSubclassesOfIncluding(baseClass);
+        }
+
+// ---------- 2. 筛选出真正声明了该方法的 concrete 类 ----------
+        for (SootClass sub : candidates) {
+            if (sub.isInterface() || sub.isPhantom())   // 跳过接口 & phantom
+                continue;
+
+            // 声明了同签名方法才算实现/覆写
+            if (sub.declaresMethod(subSig)) {
+                SootMethod impl = sub.getMethodUnsafe(subSig);
+                if (impl != null && impl.isConcrete())
+                    targets.add(impl);
+            }
+        }
+        return targets;
+    }
     public static void main(String[] args) {
-        CGBuilder builder = new CGBuilder();
+        CGBuilder builder = new CGBuilder("../benchmark/struts-045");
         builder.build();
     }
 }
