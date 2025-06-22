@@ -18,9 +18,6 @@ public class StrutsAnalysis {
     private String version = "struts";
     private static StrutsAnalysis sa = null;
     public StrutsAnalysis() {}
-    public String getProcessDir() {
-        return String.format("../benchmark/%s", version);
-    }
     public String getLibPath() {
         return "../benchmark/rt.jar";
     }
@@ -34,7 +31,8 @@ public class StrutsAnalysis {
         return sa;
     }
     public void analysis() throws IOException {
-        StrutsSetupApplication application = new StrutsSetupApplication();
+        String processDir = String.format("../benchmark/%s", version);
+        StrutsSetupApplication application = new StrutsSetupApplication(processDir, true);
 
         // Create taint wrapper
         File taintWrapperFile = new File("conf/EasyTaintWrapperSource.txt");

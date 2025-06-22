@@ -1,10 +1,12 @@
 package exa.org.taint;
 
+import exa.org.cg.CGBuilder;
 import exa.org.edge.StrutsCreateEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.Main;
+import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.data.parsers.PermissionMethodParser;
 import soot.jimple.infoflow.android.iccta.IccInstrumenter;
@@ -24,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
 /**
  * Setup class for running Struts taint analysis.
  * This is largely based on {@link SpringSetupApplication} but uses
@@ -36,6 +39,13 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
 
     protected IccInstrumenter iccInstrumenter = null;
 
+    private String processDir;
+    private boolean smartCG;
+
+    public StrutsSetupApplication(String processDir, boolean smartCG) {
+        this.processDir = processDir;
+        this.smartCG = smartCG;
+    }
     @Override
     public void setTaintWrapper(ITaintPropagationWrapper taintWrapper) {
         this.taintWrapper = taintWrapper;
@@ -55,8 +65,14 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
             ResultAggreator resultAggregator = new ResultAggreator();
             infoflow.addResultsAvailableHandler(resultAggregator);
 
-            initializeSoot();
-            createMainMethod();
+            if (smartCG) {
+                CGBuilder builder = new CGBuilder(processDir);
+                builder.build();
+                infoflow.getConfig().setSootIntegrationMode(InfoflowConfiguration.SootIntegrationMode.UseExistingInstance);
+            } else {
+                initializeSoot();
+                createMainMethod();
+            }
 
             AccessPathBasedSourceSinkManager sourceSinkManager = new AccessPathBasedSourceSinkManager(
                     parser.getSources(), parser.getSinks(), Collections.emptySet(), config, null);
@@ -92,7 +108,7 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
 
         G.reset();
         List<String> dir = new ArrayList<>();
-        dir.add(StrutsAnalysis.v().getProcessDir());
+        dir.add(processDir);
 
         if (StrutsAnalysis.analysisAlgorithm.equals("spark") || StrutsAnalysis.analysisAlgorithm.equals("jasmine")) {
             Options.v().setPhaseOption("cg.spark", "on");

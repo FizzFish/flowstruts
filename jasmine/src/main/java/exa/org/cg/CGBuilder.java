@@ -129,7 +129,7 @@ public class CGBuilder {
             System.out.println(e.getSrc() + "  →  " + e.getTgt());
         }
     }
-    private void build() {
+    public void build() {
         initializeSoot();
 //        generateEntryPoints();
 //        Scene.v().setMainClass(projectMainMethod.getDeclaringClass());
@@ -154,7 +154,7 @@ public class CGBuilder {
 
         } while (changed);
         logger.debug("CG build loop: {}", loop);
-        compute();
+//        compute();
     }
 
     private boolean addFallbackEdges(CallGraph cg) {
