@@ -83,6 +83,9 @@ public class CGBuilder {
         body.getUnits().add(Jimple.v().newReturnVoidStmt());
         return body;
     }
+    private SootMethod getDoFilterMethod() {
+        return Scene.v().getSootClass("org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter").getMethod("void doFilter(javax.servlet.ServletRequest,javax.servlet.ServletResponse,javax.servlet.FilterChain)");
+    }
     private void initializeSoot() {
         G.reset();
         List<String> dir = new ArrayList<>();
@@ -128,8 +131,11 @@ public class CGBuilder {
     }
     private void build() {
         initializeSoot();
-        generateEntryPoints();
-        Scene.v().setMainClass(projectMainMethod.getDeclaringClass());
+//        generateEntryPoints();
+//        Scene.v().setMainClass(projectMainMethod.getDeclaringClass());
+        List<SootMethod> entryPoints = new ArrayList<>();
+        entryPoints.add(getDoFilterMethod());
+        Scene.v().setEntryPoints(entryPoints);
         PackManager.v().getPack("cg").apply();
         PointsToAnalysis pag = Scene.v().getPointsToAnalysis();
         CallGraph cg = Scene.v().getCallGraph();
@@ -137,7 +143,7 @@ public class CGBuilder {
         boolean changed;
         do {
             // ② fallback：为空 PTS 的调用点补 CHA 边
-            changed = addFallbackEdges(cg, pag);
+            changed = addFallbackEdges(cg);
 
             // ④ 对增量边做传播
             if (changed) {
@@ -151,11 +157,8 @@ public class CGBuilder {
         compute();
     }
 
-    private boolean addFallbackEdges(CallGraph cg, PointsToAnalysis pag) {
+    private boolean addFallbackEdges(CallGraph cg) {
         boolean changed = false;
-        List<SootMethod> newCallees = new ArrayList<>();
-
-        Hierarchy hier = Scene.v().getActiveHierarchy();
 
         // —— ① 遍历所有已知方法与调用点 ——
         for (QueueReader<MethodOrMethodContext> it = Scene.v().getReachableMethods().listener(); it.hasNext(); ) {
