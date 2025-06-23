@@ -1,23 +1,24 @@
 package exa.org.cg;
 
-import exa.org.taint.StrutsAnalysis;
-import exa.org.utils.JimpleUtils;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.SingleGraph;
+import org.graphstream.stream.file.FileSinkGEXF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
 import soot.jimple.*;
-import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.PAG;
-import soot.jimple.spark.pag.VarNode;
 import soot.jimple.spark.solver.PropWorklist;
 import soot.jimple.spark.solver.Propagator;
 import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.jimple.toolkits.callgraph.Edge;
 import soot.options.Options;
-import soot.options.SparkOptions;
 import soot.util.Chain;
 import soot.util.queue.QueueReader;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -98,7 +99,6 @@ public class CGBuilder {
         Options.v().setPhaseOption("cg.spark", "propagator:worklist");
         Options.v().setPhaseOption("cg.spark", "simple-edges-bidirectional:false");
         Options.v().setPhaseOption("cg.spark", "on-fly-cg:true");
-//        Options.v().setPhaseOption("cg.spark", "dump-pag:true");
         Options.v().setPhaseOption("cg.spark", "dump-html:true");
         Options.v().setPhaseOption("cg.spark", "double-set-old:hybrid");
         Options.v().setPhaseOption("cg.spark", "double-set-new:hybrid");
@@ -140,25 +140,25 @@ public class CGBuilder {
         PointsToAnalysis pag = Scene.v().getPointsToAnalysis();
         CallGraph cg = Scene.v().getCallGraph();
         int loop = 0;
-        boolean changed;
+        int changed;
         do {
+
             // ② fallback：为空 PTS 的调用点补 CHA 边
             changed = addFallbackEdges(cg);
 
             // ④ 对增量边做传播
-            if (changed) {
+            if (changed > 0) {
                 Propagator propagator = new PropWorklist((PAG) pag);
                 propagator.propagate();   // 只增量迭代
             }
             loop++;
-
-        } while (changed);
-        logger.debug("CG build loop: {}", loop);
-//        compute();
+            logger.warn("CG build loop: {}, count {}", loop, changed);
+        } while (changed > 0);
+        compute();
     }
 
-    private boolean addFallbackEdges(CallGraph cg) {
-        boolean changed = false;
+    private int addFallbackEdges(CallGraph cg) {
+        int changed = 0;
 
         // —— ① 遍历所有已知方法与调用点 ——
         for (QueueReader<MethodOrMethodContext> it = Scene.v().getReachableMethods().listener(); it.hasNext(); ) {
@@ -187,7 +187,7 @@ public class CGBuilder {
                 for (SootMethod target : targets) {
                     cg.addEdge(new Edge(src.method(), u, target, Kind.VIRTUAL));
                 }
-                changed = true;
+                changed += targets.size();
             }
         }
 
@@ -198,10 +198,11 @@ public class CGBuilder {
         SootMethod declared = invokeExpr.getMethod();
         String subSig       = declared.getSubSignature();
         SootClass baseClass = declared.getDeclaringClass();
-        if (inferCache.containsKey(subSig))
-            return inferCache.get(subSig);
+        String signature = declared.getSignature();
+        if (inferCache.containsKey(signature))
+            return inferCache.get(signature);
         Set<SootMethod> out = smartInfer( invokeExpr, declared, subSig, baseClass, hier);
-        inferCache.put(subSig, out);
+        inferCache.put(signature, out);
         if (out.size()>2)
             logger.debug("{}:{} has {} targets in {} callsite", src.getDeclaringClass().getShortName(), src.getName(), out.size(), declared.getName());
         return out;
@@ -266,8 +267,55 @@ public class CGBuilder {
         }
         return targets;
     }
-    public static void main(String[] args) {
+    private String shorten(String sig) {
+        // (可选) 把长签名裁成类名.方法名 方便在 Gephi 面板里阅读
+        int p = sig.indexOf(':');
+        return p > 0 ? sig.substring(p + 1) : sig;
+    }
+    private void exportGephi(String outPath) throws IOException {
+        // 创建 GraphStream 图对象
+        Graph graph = new SingleGraph("CallGraph");
+
+        // 存储节点和边
+        Map<String, Node> nodeMap = new HashMap<>();
+        Set<String> edgesSet = new HashSet<>();
+        CallGraph cg = Scene.v().getCallGraph();
+        // 遍历 CallGraph，添加节点和边
+        for (Edge e : cg) {
+            String source = e.getSrc().method().getSignature();
+            String target = e.getTgt().method().getSignature();
+
+            // 如果源节点不存在，则创建
+            Node sourceNode = nodeMap.computeIfAbsent(source, sig -> {
+                Node node = graph.addNode(sig);
+                node.setAttribute("label", sig);
+                return node;
+            });
+
+            // 如果目标节点不存在，则创建
+            Node targetNode = nodeMap.computeIfAbsent(target, sig -> {
+                Node node = graph.addNode(sig);
+                node.setAttribute("label", sig);
+                return node;
+            });
+
+            // 添加边
+            String edgeId = source + "_" + target;
+            if (!edgesSet.contains(edgeId)) {
+                graph.addEdge(edgeId, sourceNode, targetNode, true);  // true表示有向边
+                edgesSet.add(edgeId); // 记录已添加的边
+            }
+        }
+
+        // 导出为 GEXF 格式
+        FileSinkGEXF fileSink = new FileSinkGEXF();
+        fileSink.writeAll(graph, outPath);
+
+        System.out.println("Graph exported to: " + outPath);
+    }
+    public static void main(String[] args) throws IOException {
         CGBuilder builder = new CGBuilder("../benchmark/struts-045");
         builder.build();
+        builder.exportGephi("cg1.gexf");
     }
 }

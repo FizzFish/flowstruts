@@ -44,7 +44,7 @@ public class StrutsAnalysis {
 
     public static void main(String[] args) throws IOException {
         StrutsAnalysis sa = v();
-        sa.version = "struts-005";
+        sa.version = args[0];
         sa.analysis();
     }
 }

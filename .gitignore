@@ -9,4 +9,6 @@ jasmine/sootOutput/
 /.recommenders
 .idea/
 *.iml
+*.gexf
 target/
+jasmine/conf/spring
