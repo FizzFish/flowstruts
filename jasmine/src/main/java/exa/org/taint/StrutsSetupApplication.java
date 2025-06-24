@@ -1,6 +1,7 @@
 package exa.org.taint;
 
 import exa.org.cg.CGBuilder;
+import exa.org.cg.EnhancedCGBuilder;
 import exa.org.edge.StrutsCreateEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class StrutsSetupApplication implements ITaintWrapperDataFlowAnalysis {
             infoflow.addResultsAvailableHandler(resultAggregator);
 
             if (smartCG) {
-                CGBuilder builder = new CGBuilder(processDir);
+                EnhancedCGBuilder builder = new EnhancedCGBuilder(processDir);
                 builder.build();
                 infoflow.getConfig().setSootIntegrationMode(InfoflowConfiguration.SootIntegrationMode.UseExistingInstance);
             } else {

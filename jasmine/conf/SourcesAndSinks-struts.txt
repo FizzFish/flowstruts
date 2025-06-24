@@ -1,6 +1,7 @@
 <com.opensymphony.xwork2.interceptor.ParametersInterceptor: java.util.Map retrieveParameters(com.opensymphony.xwork2.ActionContext)> -> _SOURCE_
 <com.opensymphony.xwork2.util.ValueStack: void setValue(java.lang.String,java.lang.Object)> -> _SINK_
 <org.apache.commons.fileupload.RequestContext: java.lang.String getContentType()> -> _SOURCE_
+<org.apache.struts2.components.UrlProvider: java.util.Map getParameters()> -> _SOURCE_
 <com.opensymphony.xwork2.util.TextParseUtil: java.lang.String translateVariables(java.lang.String,com.opensymphony.xwork2.util.ValueStack)> -> _SINK_
 <org.apache.struts2.dispatcher.multipart.JakartaMultiPartRequest: java.lang.String buildErrorMessage(java.lang.Throwable,java.lang.Object[])> -> _SINK_
 <javax.servlet.ServletRequest: java.lang.String getParameter(java.lang.String)> -> _SOURCE_
